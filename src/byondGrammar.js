@@ -46,13 +46,19 @@ function createBYONDGrammar()
     this.numberValue = this.decimalNumber.ast;
     this.otherValue = m.seq(this.inline.zeroOrMore).ast;
     this.value = m.choice(this.stringValueWrapper, this.numberValue, this.otherValue);
+    
     this.keyValuePair = m.seq(this.ws, this.key, ' = ', this.value).ast;
+
+    this.stringKey = this.word.ast;
+    this.listObjectNumDef = m.seq('"', this.stringKey, '" = ', this.numberValue).ast;
+    this.requiredReagents = m.seq(this.ws, 'required_reagents = list(', this.listObjectNumDef.delimited(this.varDelimiter), ')').ast;
 
     this.tabbedInLine = m.choice('\t', '    ').oneOrMore.then(this.restOfLine);
 
     this.functionDefLine = lineEndingCommentsWrapper(this.fullFunctionDef);
     this.objectDefLine = lineEndingCommentsWrapper(this.fullObjectRef);
-    this.objectKeyValuePairLine = lineEndingCommentsWrapper(this.keyValuePair);
+    this.objectKeyValuePairLine = lineEndingCommentsWrapper(m.choice(this.requiredReagents, this.keyValuePair));
+
     this.functionDef = m.seq(this.functionDefLine, this.tabbedInLine.oneOrMore).ast;
     this.objectDef = m.seq(this.objectDefLine, m.choice(this.inlineComment, this.blockComment, this.objectKeyValuePairLine).oneOrMore).ast;
 
