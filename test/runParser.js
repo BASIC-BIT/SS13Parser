@@ -2,31 +2,44 @@ const parseBYOND = require('../src/byondParser');
 const fs = require('fs');
 const stringify = require('json-stringify-safe');
 const sanitize = require('../src/util/sanitize');
-var dir = require('node-dir');
+const dir = require('node-dir');
+const util = require('util');
 
-function getParsedData() {
+const readFilesStreamCallbackWrapper = (targetDir, callback) => { //Make promisify-compliant with an array instead of 2 callback args
   const data = [];
-  dir.readFilesStream(`${__dirname}/data`,
-    function(err, stream, next) {
+  dir.readFilesStream(targetDir,
+    function (err, stream, next) {
       if (err) throw err;
       var content = '';
-      stream.on('data',function(buffer) {
+      stream.on('data', function (buffer) {
         content += buffer.toString();
       });
-      stream.on('end',function() {
+      stream.on('end', function () {
         data.push(parseBYOND(content));
         next();
       });
-    },
-    function(err, files){
-      if (err) throw err;
-      console.log('finished reading files:', files);
-      fs.writeFile(`${__dirname}/output/parsed.json`, JSON.stringify(data), (err) => {
-        if (err) {
-          console.log(err);
-        }
-      });
-    });
+    }, (err, files) => callback(err, { files, data }));
+};
+
+async function readDir(targetDir) {
+  return await util.promisify(readFilesStreamCallbackWrapper)(targetDir);
 }
 
-getParsedData();
+function numberWithCommas(x) {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+async function getParsedData() {
+  const { files, data } = await readDir(`${__dirname}/data`);
+
+  console.log('finished reading files:', files);
+  const fileData = JSON.stringify(data);
+  await util.promisify(fs.writeFile)(`${__dirname}/output/parsed.json`, fileData);
+  console.log(`Wrote to output.  Length: ${numberWithCommas(fileData.length)} B`);
+}
+
+try {
+  getParsedData();
+} catch (e) {
+  console.log(e);
+}

@@ -6,6 +6,8 @@ function createBYONDGrammar()
 {
   let g = new function()
   {
+    this.quoteOpt = m.seq('"').opt;
+    this.commaOpt = m.seq(',').opt;
     this.ws = m.char(' \t').oneOrMore;
     this.newLine = m.newLine.oneOrMore;
     this.optionalSpaces = m.char(' \t').zeroOrMore;
@@ -27,13 +29,13 @@ function createBYONDGrammar()
     this.refSeparator = m.seq('/');
     this.word = m.choice(m.char('_'), m.choice(m.letters, m.integer)).oneOrMore;
 
-    this.anyWs = m.char(' \t\n\r').zeroOrMore;
+    this.anyWs = m.char(' \t\n\r').or(m.seq('//', this.restOfLine)).zeroOrMore;
     this.varDelimiter = m.seq(this.anyWs, ',', this.anyWs);
 
     const lineEndingCommentsWrapper = (val) =>
       m.seq(val, m.choice(this.inlineComment, this.ws.opt.then(this.lineEnd)));
 
-    this.fullObjectRef = m.seq(this.refSeparator, this.word).oneOrMore.ast;
+    this.fullObjectRef = m.seq(this.refSeparator, this.word).oneOrMore.then(this.refSeparator.opt).ast;
     this.objectRef = this.word.then(m.seq(this.refSeparator, this.word).zeroOrMore);
 
     this.functionParams = m.seq('(', this.inline.oneOrMore);
@@ -44,15 +46,15 @@ function createBYONDGrammar()
 
     this.key = this.objectRef.ast;
     this.otherValue = m.seq(this.inline.zeroOrMore).ast;
-    this.stringValue = this.any.unless(this.newLine.or('"')).zeroOrMore.ast;
+    this.stringValue = m.choice('\\"', this.any.unless(this.newLine.or('"'))).zeroOrMore.ast;
     this.stringValueWrapper = m.seq('"', this.stringValue, '"');
     this.numberValue = this.decimalNumber.ast;
+    this.timeValue = m.seq(this.decimalNumber, ' ', m.choice('MINUTES', 'SECONDS', 'HOURS')).ast;
     this.listKey = this.word.ast;
     this.listInnerValue = m.choice(this.stringValueWrapper, this.numberValue);
-    this.quoteOpt = m.seq('"').opt;
     this.listKeyValuePair = m.seq(this.quoteOpt, this.listKey, this.quoteOpt, m.seq(' = ', this.listInnerValue).opt).ast;
-    this.listValue = m.seq('list(', this.anyWs, this.listKeyValuePair.delimited(this.varDelimiter), this.anyWs, ')').ast;
-    this.value = m.choice(this.listValue, this.stringValueWrapper, this.numberValue, this.otherValue);
+    this.listValue = m.seq('list(', this.anyWs, this.listKeyValuePair.delimited(this.varDelimiter), this.commaOpt, this.anyWs, ')').ast;
+    this.value = m.choice(this.listValue, this.stringValueWrapper, this.timeValue, this.otherValue);
 
     this.keyValuePair = m.seq(this.ws, this.key, ' = ', this.value).ast;
 
