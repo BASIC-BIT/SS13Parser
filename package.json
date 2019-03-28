@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "json-stringify-safe": "^5.0.1",
-    "myna-parser": "^2.5.1"
+    "myna-parser": "^2.5.1",
+    "node-dir": "^0.1.17"
   }
 }

@@ -27,40 +27,47 @@ function createBYONDGrammar()
     this.refSeparator = m.seq('/');
     this.word = m.choice(m.char('_'), m.choice(m.letters, m.integer)).oneOrMore;
 
-    this.varDelimiter = m.seq(', ');
+    this.anyWs = m.char(' \t\n\r').zeroOrMore;
+    this.varDelimiter = m.seq(this.anyWs, ',', this.anyWs);
 
     const lineEndingCommentsWrapper = (val) =>
       m.seq(val, m.choice(this.inlineComment, this.ws.opt.then(this.lineEnd)));
 
     this.fullObjectRef = m.seq(this.refSeparator, this.word).oneOrMore.ast;
     this.objectRef = this.word.then(m.seq(this.refSeparator, this.word).zeroOrMore);
-    this.functionParams = m.seq('(', this.objectRef.delimited(this.varDelimiter), ')');
+
+    this.functionParams = m.seq('(', this.inline.oneOrMore);
     this.fullFunctionDef = m.seq(this.fullObjectRef, this.functionParams).ast;
 
-    this.decimalComponent = m.seq('.',m.integer.oneOrMore);
+    this.decimalComponent = m.seq('.', m.integer.oneOrMore);
     this.decimalNumber = m.seq(m.integer.oneOrMore, this.decimalComponent.opt);
 
     this.key = this.objectRef.ast;
+    this.otherValue = m.seq(this.inline.zeroOrMore).ast;
     this.stringValue = this.any.unless(this.newLine.or('"')).zeroOrMore.ast;
     this.stringValueWrapper = m.seq('"', this.stringValue, '"');
     this.numberValue = this.decimalNumber.ast;
-    this.otherValue = m.seq(this.inline.zeroOrMore).ast;
-    this.value = m.choice(this.stringValueWrapper, this.numberValue, this.otherValue);
-    
-    this.keyValuePair = m.seq(this.ws, this.key, ' = ', this.value).ast;
+    this.listKey = this.word.ast;
+    this.listInnerValue = m.choice(this.stringValueWrapper, this.numberValue);
+    this.quoteOpt = m.seq('"').opt;
+    this.listKeyValuePair = m.seq(this.quoteOpt, this.listKey, this.quoteOpt, m.seq(' = ', this.listInnerValue).opt).ast;
+    this.listValue = m.seq('list(', this.anyWs, this.listKeyValuePair.delimited(this.varDelimiter), this.anyWs, ')').ast;
+    this.value = m.choice(this.listValue, this.stringValueWrapper, this.numberValue, this.otherValue);
 
-    this.stringKey = this.word.ast;
-    this.listObjectNumDef = m.seq('"', this.stringKey, '" = ', this.numberValue).ast;
-    this.requiredReagents = m.seq(this.ws, 'required_reagents = list(', this.listObjectNumDef.delimited(this.varDelimiter), ')').ast;
+    this.keyValuePair = m.seq(this.ws, this.key, ' = ', this.value).ast;
 
     this.tabbedInLine = m.choice('\t', '    ').oneOrMore.then(this.restOfLine);
 
     this.functionDefLine = lineEndingCommentsWrapper(this.fullFunctionDef);
-    this.objectDefLine = lineEndingCommentsWrapper(this.fullObjectRef);
-    this.objectKeyValuePairLine = lineEndingCommentsWrapper(m.choice(this.requiredReagents, this.keyValuePair));
+    this.objectDefMultiLineStart = lineEndingCommentsWrapper(this.fullObjectRef);
+    this.objectDefSingleLine = m.seq(this.fullObjectRef, ' = ', this.value).ast;
+    this.objectDefSingleLineWrapper = lineEndingCommentsWrapper(this.objectDefSingleLine);
+    this.objectKeyValuePairLine = lineEndingCommentsWrapper(this.keyValuePair);
 
-    this.functionDef = m.seq(this.functionDefLine, this.tabbedInLine.oneOrMore).ast;
-    this.objectDef = m.seq(this.objectDefLine, m.choice(this.inlineComment, this.blockComment, this.objectKeyValuePairLine).oneOrMore).ast;
+    this.functionDef = m.seq(this.functionDefLine, this.tabbedInLine.zeroOrMore).ast;
+    this.objectDef = this.objectDefSingleLineWrapper
+    .or(m.seq(this.objectDefMultiLineStart, m.choice(this.inlineComment, this.blockComment, this.objectKeyValuePairLine).oneOrMore))
+      .ast;
 
     this.content = m.choice(this.inlineComment, this.defineLine, this.blockComment, this.functionDef, this.objectDef, this.emptyLine);
     this.document = this.content.oneOrMore;
