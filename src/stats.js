@@ -6,7 +6,11 @@ function getObjectKeyValue(object, key) {
   return object.children.find(child => child.rule === 'keyValuePair' && child.children[0].value === key);
 }
 
-function getListValueForKey(object, key, { ignoreValue = false } = {}) {
+function getListValueForKey(object, key, {
+  ignoreValue = false,
+  shouldParseInt = false,
+  filterZero = false,
+} = {}) {
   const list = getObjectKeyValue(object, key);
 
   if (!(list && list.children && list.children[1] && list.children[1].children)) {
@@ -19,14 +23,15 @@ function getListValueForKey(object, key, { ignoreValue = false } = {}) {
 
   return list.children[1].children
   .map(listValue => ({
-    [listValue.children[0].value]: listValue.children[1].value,
+    [listValue.children[0].value]: shouldParseInt ? parseInt(listValue.children[1].value) : listValue.children[1].value,
   }))
+  .filter(listValue => !filterZero || Object.values(listValue)[0] !== 0)
   .reduce((acc, cur) => ({ ...acc, ...cur }), {});
 }
 
 function getChemReagentsFromObjectDef(object) {
-  const reagentsList = getListValueForKey(object, 'required_reagents');
-  const catalystsList = getListValueForKey(object, 'catalysts');
+  const reagentsList = getListValueForKey(object, 'required_reagents', { shouldParseInt: true, filterZero: true });
+  const catalystsList = getListValueForKey(object, 'catalysts', { shouldParseInt: true });
   const inhibitorsList = getListValueForKey(object, 'inhibitors', { ignoreValue: true });
   const objectName = getObjectKeyValue(object, 'name').children[1].value;
   return {
