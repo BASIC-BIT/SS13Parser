@@ -1,4 +1,5 @@
 const parseBYOND = require('../src/byondParser');
+const { getChemRecipes } = require('../src/stats');
 const fs = require('fs');
 const stringify = require('json-stringify-safe');
 const sanitize = require('../src/util/sanitize');
@@ -32,9 +33,13 @@ function numberWithCommas(x) {
 async function getParsedData() {
   const { files, data } = await readDir(`${__dirname}/data`);
 
-  console.log('finished reading files:', files);
+  const chemRecipes = getChemRecipes(data);
+
+  console.log(`Finished parsing ${files.length} files.`);
   const fileData = JSON.stringify(data);
+  const chemRecipesData = JSON.stringify(chemRecipes);
   await util.promisify(fs.writeFile)(`${__dirname}/output/parsed.json`, fileData);
+  await util.promisify(fs.writeFile)(`${__dirname}/output/chemRecipes.json`, chemRecipesData);
   console.log(`Wrote to output.  Length: ${numberWithCommas(fileData.length)} B`);
 }
 
