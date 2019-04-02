@@ -33,12 +33,17 @@ function getChemReagentsFromObjectDef(object) {
   const reagentsList = getListValueForKey(object, 'required_reagents', { shouldParseInt: true, filterZero: true });
   const catalystsList = getListValueForKey(object, 'catalysts', { shouldParseInt: true });
   const inhibitorsList = getListValueForKey(object, 'inhibitors', { ignoreValue: true });
+  const requiredContainer = getObjectKeyValue(object, 'required');
+  const result = getObjectKeyValue(object, 'result');
+  const isResultNull = result && result.children[1].value === 'null';
   const objectName = getObjectKeyValue(object, 'name').children[1].value;
   return {
     [objectName]: {
       recipe: reagentsList,
+      ...(isResultNull && { resultNotLiquid: true }),
       ...(catalystsList && { catalysts: catalystsList }),
       ...(inhibitorsList && { inhibitors: inhibitorsList }),
+      ...(requiredContainer && { requiredContainer: requiredContainer.children[1].value }),
       result_amount: parseInt(getObjectKeyValue(object, 'result_amount').children[1].value),
     }
   }
