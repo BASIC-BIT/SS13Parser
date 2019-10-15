@@ -4,13 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node ./test/runParser"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "json-stringify-safe": "^5.0.1",
     "myna-parser": "^2.5.1",
-    "node-dir": "^0.1.17"
+    "node-dir": "^0.1.17",
+    "pegjs": "^0.10.0"
   }
 }

@@ -1,0 +1,205 @@
+CodeFile
+  = expressions:(Newline / CodeExpression)* { return expressions.filter(i => i).reduce((acc,cur) => ({ ...acc, ...cur })) }
+
+CodeExpression
+  = value:(Proc / ObjectDefinition) { return value }
+  / ((Comment NewlineWhitespace) / DefineDefinition / FunctionCall / EmptyLine) { return undefined }
+
+NewlineWhitespace
+  = Newline (DefiniteWhitespace / Newline)*
+
+CommentStart
+  = "//"
+
+BlockComment
+  = "/*" text:TextUntilBlockCommentTerminator "*/" { return text.join(""); }
+
+TextUntilBlockCommentTerminator
+  = x:(&HaveBlockCommentTerminatorAhead !HaveBlockCommentTerminatorNext .)* { return x.map(y => y[2]) }
+
+HaveBlockCommentTerminatorAhead
+  = . (!"*/" .)* "*/"
+
+HaveBlockCommentTerminatorNext
+ = "*/"
+
+EmptyLine
+  = [ \t]* Comment? [\r]? [\n]
+
+NonNewline
+  = chars:$[^\n]+
+
+OptionalNonNewline
+  = chars:$[^\n]*
+
+Comment
+  = CommentStart OptionalNonNewline
+  / BlockComment
+
+ObjectSetter
+  = x:("/" FullObject) { return x.join('') }
+
+ObjectDeclarationDefinition
+  = obj:ObjectSetter { return { [obj]: 'DECLARATION' } }
+  / obj:FullObject { return { [obj]: 'DECLARATION' } }
+
+DefineDefinition
+  = "#define" NonNewline
+  / "#undef" NonNewline
+
+Proc
+  = procName:ObjectSetter _ ArgumentList [ \t]* Comment? ((Newline ProcLine) / EmptyLine)+ { return { [procName]: "PROC" } }
+  / procName:FullObject _ ArgumentList [ \t]* Comment? ((Newline ProcLine) / EmptyLine)+ { return { [procName]: "PROC" } }
+
+InlineProcDef
+  = procName:ObjectSetter _ ArgumentList [ \t]* Comment? ((Newline InlineProcLine) / EmptyLine)+ { return { [procName]: "PROC" } }
+  / procName:FullObject _ ArgumentList [ \t]* Comment? ((Newline InlineProcLine) / EmptyLine)+ { return { [procName]: "PROC" } }
+
+RestOfLine
+  = [ \t]* Comment? Newline { return undefined }
+
+ObjectDefinition
+  = object:ObjectSetter RestOfLine pairs:(KeyValueLine*) { return { [object]: pairs.reduce((acc, keyValuePair) => ({ ...acc, ...keyValuePair }), {}) } }
+  / object:FullObject RestOfLine pairs:(KeyValueLine*) { return { [object]: pairs.reduce((acc, keyValuePair) => ({ ...acc, ...keyValuePair }), {}) } }
+  / SimpleObjectSetter
+
+SimpleObjectSetter
+  = key:ObjectSetter Spaces "=" Spaces value:ValueDefinition RestOfLine { return { [key]: value } }
+
+KeyValueLine
+  = Tab key:FullObject _ "=" _ value:ValueDefinition RestOfLine { return { [key]: value } }
+  / Tab obj:ObjectDeclarationDefinition RestOfLine { return obj }
+  / Tab obj:InlineProcDef { return obj }
+  / RestOfLine { return null }
+
+FunctionCall
+  = (EnumDefinition / FullObject) "(" (FunctionCallArgument (Delimiter OptionalSpaces FunctionCallArgument)* Delimiter?)? ")"
+
+FunctionCallArgument
+  = NumberDefinition / PrimitiveDefinition / EnumDefinition / MathExpression / ObjectSetter / StringDefinition
+
+ValueDefinition
+  = StringDefinition / ListDefinition / PrimitiveDefinition / MathExpression / DefinedVariable / FunctionCall / NumberDefinition / EnumDefinition / ObjectDeclarationDefinition
+
+DefinedVariable
+  = [A-Za-z._]+ { return text() }
+
+PrimitiveDefinition
+  = "null"
+  / "TRUE"
+  / "FALSE"
+
+StringDefinition
+  = "\"" text:TextUntilDoubleStringTerminator "\"" { return text.join(""); }
+  / "'" text:TextUntilSingleStringTerminator "'" { return text.join(""); }
+
+TextUntilDoubleStringTerminator
+  = x:(&HaveDoubleStringTerminatorAhead !HaveDoubleStringTerminatorNext .)* { return x.map(y => y[2]) }
+
+HaveDoubleStringTerminatorAhead
+  = . (!"\"" .)* "\""
+
+HaveDoubleStringTerminatorNext
+ = "\""
+
+TextUntilSingleStringTerminator
+  = x:(&HaveSingleStringTerminatorAhead !HaveSingleStringTerminatorNext .)* { return x.map(y => y[2]) }
+
+HaveSingleStringTerminatorAhead
+  = . (!"'" .)* "'"
+
+HaveSingleStringTerminatorNext
+ = "'"
+
+Operator
+  = [|+-/*]
+
+Operand
+  = EnumDefinition / NumberDefinition
+
+MathExpression
+  = Operand Spaces? Operator OptionalNonNewline { return "math" }
+  / Operator Spaces? Operand OptionalNonNewline { return "math" }
+
+ListObject
+  = (MapObjectDefinition / ListDefinition / StringDefinition / EnumDefinition / NumberDefinition / ObjectSetter)
+
+MapKeyDefinition
+  = EnumDefinition / StringDefinition
+
+MapValueDefinition
+  = ValueDefinition
+
+ListDefinition
+  = "list" _ "(" _ firstObj:ListObject _ restObjs:(ListNonFirstObject*) _ Delimiter? _ ")" { return [firstObj, ...restObjs] }
+  / "list" _ "(" _ ")" { return [] }
+
+ListNonFirstObject
+  = Delimiter _ obj:ListObject { return obj }
+
+ArgumentList
+  = "(" _ ArgumentDefinition _ (Delimiter _ ArgumentDefinition)* _ ")"
+  / "(" _ ")"
+
+MapObjectDefinition
+  = _ key:MapKeyDefinition _ "=" _ value:MapValueDefinition _ { return { [key]: value } }
+
+EnumDefinition
+  = [A-Za-z_0-9]+ { return text() }
+
+NumberDefinition
+  = [0-9.]+ { return parseInt(text(), 10) }
+
+ObjectSeparator
+  = "/"
+
+Variable
+  = x:([a-zA-Z_]+) { return x.join('') }
+
+ObjectPart
+  = x:([a-zA-Z_0-9]+) { return x.join('') }
+
+ProcLine
+  = Tab NonNewline
+  / OptionalNonNewlineWhitespace Comment
+  / OptionalNonNewlineWhitespace BlockComment
+
+InlineProcLine
+  = Tab Tab NonNewline
+  / OptionalNonNewlineWhitespace Comment
+  / OptionalNonNewlineWhitespace BlockComment
+
+Tab
+  = [\t] { return undefined }
+
+ArgumentDefinition
+  = (FullObject DefiniteWhitespace "as" DefiniteWhitespace Variable)
+  / (FullObject DefiniteWhitespace "in range" ArgumentList)
+  / (FullObject Spaces? "=" Spaces? ValueDefinition)
+  / FullObject
+  / DefinedVariable
+  / "..."
+
+FullObject
+  = x:(ObjectPart (ObjectSeparator ObjectPart)*) { return x[0] + x[1].flatMap(i => i).join('') }
+
+Delimiter
+  = ","
+
+OptionalSpaces
+  = [ ]* { return undefined }
+
+Spaces
+  = [ ]+ { return undefined }
+
+OptionalNonNewlineWhitespace
+  = [ \t]* { return undefined }
+
+Newline
+  = [\r]?[\n] { return undefined }
+
+DefiniteWhitespace
+  = [ \t\n\r]+ { return undefined }
+
+_ "whitespace"
+  = [ \t\n\r]* { return undefined }

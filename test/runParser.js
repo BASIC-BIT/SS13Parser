@@ -1,25 +1,28 @@
-const parseBYOND = require('../src/byondParser');
-const { getChemRecipes } = require('../src/stats');
 const fs = require('fs');
-const stringify = require('json-stringify-safe');
-const sanitize = require('../src/util/sanitize');
 const dir = require('node-dir');
 const util = require('util');
+const { parse } = require('../src/pegParser');
 
 const readFilesStreamCallbackWrapper = (targetDir, callback) => { //Make promisify-compliant with an array instead of 2 callback args
   const data = [];
+  const failedFiles = [];
   dir.readFilesStream(targetDir,
-    function (err, stream, next) {
+    function (err, stream, filename, next) {
       if (err) throw err;
       var content = '';
       stream.on('data', function (buffer) {
         content += buffer.toString();
       });
       stream.on('end', function () {
-        data.push(parseBYOND(content));
+        try {
+          data.push(parse(content));
+        } catch(e) {
+          console.log(`Failed parsing file ${filename} - ${e.message}\n - ${e.error && e.error.message}`);
+          failedFiles.push(filename);
+        }
         next();
       });
-    }, (err, files) => callback(err, { files, data }));
+    }, (err, files) => callback(err, { files, data, failedFiles }));
 };
 
 async function readDir(targetDir) {
@@ -31,16 +34,20 @@ function numberWithCommas(x) {
 }
 
 async function getParsedData() {
-  const { files, data } = await readDir(`${__dirname}/data`);
+  const startTime = Date.now();
+  const { files, data, failedFiles } = await readDir(`${__dirname}/data`);
 
-  const chemRecipes = getChemRecipes(data);
+  console.log(`Finished parsing ${files.length} files - failed ${failedFiles.length}`);
 
-  console.log(`Finished parsing ${files.length} files.`);
-  const fileData = JSON.stringify(data);
-  const chemRecipesData = JSON.stringify(chemRecipes);
+  const mappedData = data.reduce((acc, cur) => ({ ...acc, ...cur }), {});
+
+  const fileData = JSON.stringify(mappedData);
+
   await util.promisify(fs.writeFile)(`${__dirname}/output/parsed.json`, fileData);
-  await util.promisify(fs.writeFile)(`${__dirname}/output/chemRecipes.json`, chemRecipesData);
-  console.log(`Wrote to output.  Length: ${numberWithCommas(fileData.length)} B`);
+  const endTime = Date.now();
+
+  const secondsToComplete = (endTime - startTime) / 1000;
+  console.log(`Wrote to output.  Length: ${numberWithCommas(fileData.length)} B - Time: ${secondsToComplete} seconds`);
 }
 
 try {
