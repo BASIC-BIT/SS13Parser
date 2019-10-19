@@ -37,6 +37,11 @@ async function getParsedData() {
   const startTime = Date.now();
   const { files, data, failedFiles } = await readDir(`${__dirname}/data`);
 
+  const fileCount = files.length;
+  const failedFileCount = failedFiles.length;
+  const successFilesCount = fileCount - failedFileCount;
+  const percentSuccess = 100 * successFilesCount / fileCount;
+
   console.log(`Finished parsing ${files.length} files - failed ${failedFiles.length}`);
 
   const mappedData = data.reduce((acc, cur) => ({ ...acc, ...cur }), {});
@@ -47,7 +52,7 @@ async function getParsedData() {
   const endTime = Date.now();
 
   const secondsToComplete = (endTime - startTime) / 1000;
-  console.log(`Wrote to output.  Length: ${numberWithCommas(fileData.length)} B - Time: ${secondsToComplete} seconds`);
+  console.log(`Wrote to output.\nLength: ${numberWithCommas(fileData.length)} B\nTime: ${secondsToComplete} seconds\nSuccess rate: ${successFilesCount} / ${fileCount} (${percentSuccess}%)`);
 }
 
 try {

@@ -1,0 +1,42 @@
+
+ProcLine
+  = Tab NonNewline
+  / OptionalNonNewlineWhitespace Comment
+  / OptionalNonNewlineWhitespace BlockComment
+
+InlineProcLine
+  = Tab Tab NonNewline
+  / OptionalNonNewlineWhitespace Comment
+  / OptionalNonNewlineWhitespace BlockComment
+
+ArgumentDefinition
+  = (FullObject DefiniteWhitespace "as" DefiniteWhitespace Variable)
+  / (FullObject DefiniteWhitespace "in range" ArgumentList)
+  / (FullObject Spaces? "=" Spaces? ArgumentValue)
+  / DefinedMultiPartVariable
+  / FullObject
+  / DefinedVariable
+  / "..."
+
+ArgumentList
+  = "(" _ ArgumentDefinition _ (Delimiter _ ArgumentDefinition)* _ ")"
+  / "(" _ ")"
+
+Proc
+  = procName:ObjectSetter _ ArgumentList [ \t]* Comment? ((Newline ProcLine) / EmptyLine)+ { return { [procName]: "PROC" } }
+  / procName:FullObject _ ArgumentList [ \t]* Comment? ((Newline ProcLine) / EmptyLine)+ { return { [procName]: "PROC" } }
+
+InlineProcDef
+  = "proc" [ \t]* Comment? ((Newline InlineProcLine) / EmptyLine)+
+  / procName:ObjectSetter _ ArgumentList [ \t]* Comment? ((Newline InlineProcLine) / EmptyLine)+ { return { [procName]: "PROC" } }
+  / procName:FullObject _ ArgumentList [ \t]* Comment? ((Newline InlineProcLine) / EmptyLine)+ { return { [procName]: "PROC" } }
+
+
+FunctionCall
+  = (Enum / FullObject) "(" (FunctionCallArgument (Delimiter Spaces? FunctionCallArgument)* Delimiter?)? ")"
+
+FunctionCallArgument
+  = Number / PrimitiveDefinition / Enum / MathExpression / ObjectSetter / String
+
+ArgumentValue
+  = String / ListDefinition / PrimitiveDefinition / FunctionCall / DefinedVariable / Number / Enum / ObjectDeclarationDefinition

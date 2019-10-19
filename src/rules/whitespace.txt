@@ -1,0 +1,24 @@
+NewlineWhitespace
+  = Newline (DefiniteWhitespace / Newline)*
+
+EmptyLine
+  = [ \t]* Comment? [\r]? [\n]
+
+Spaces
+  = [ ]+
+
+OptionalNonNewlineWhitespace
+  = [ \t]*
+
+Newline
+  = [\r]?[\n]
+
+DefiniteWhitespace
+  = [ \t\n\r]+
+
+_ "whitespace"
+  = [ \t\n\r]*
+
+Tab
+  = [\t]
+  / "    "

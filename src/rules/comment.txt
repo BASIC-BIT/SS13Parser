@@ -1,0 +1,18 @@
+CommentStart
+  = "//"
+
+BlockComment
+  = "/*" text:TextUntilBlockCommentTerminator "*/" { return text.join(""); }
+
+TextUntilBlockCommentTerminator
+  = x:(&HaveBlockCommentTerminatorAhead !HaveBlockCommentTerminatorNext .)* { return x.map(y => y[2]) }
+
+HaveBlockCommentTerminatorAhead
+  = . (!"*/" .)* "*/"
+
+HaveBlockCommentTerminatorNext
+ = "*/"
+
+Comment
+  = CommentStart OptionalNonNewline
+  / BlockComment

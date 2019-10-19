@@ -1,0 +1,10 @@
+Operator
+  = "/" !"/"
+  / [|+\-*]
+
+Operand
+  = Enum / Number
+
+MathExpression
+  = (Operand Spaces? Operator Spaces? Operand OptionalNonNewline) { return "math" }
+  / (Operator Spaces? Operand OptionalNonNewline) { return "math" }

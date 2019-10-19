@@ -1,0 +1,13 @@
+NonNewline
+  = chars:$[^\n]+
+
+OptionalNonNewline
+  = chars:$[^\n]*
+
+RestOfLine
+  = [ \t]* Comment? (Newline) { return undefined }
+
+RestOfLineOrEOF
+  = [ \t]* Comment? (Newline / EOF) { return undefined }
+
+EOF = !.

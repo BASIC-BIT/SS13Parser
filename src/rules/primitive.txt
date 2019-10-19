@@ -1,0 +1,37 @@
+Enum
+  = [A-Za-z_0-9]+ { return text() }
+
+Number
+  = [0-9.]+ { return parseInt(text(), 10) }
+
+Integer
+  = [0-9]+ { return parseInt(text(), 10) }
+
+FullObject
+  = x:(ObjectPart (ObjectSeparator ObjectPart)*) { return x[0] + x[1].flatMap(i => i).join('') }
+
+ObjectSeparator
+  = "/"
+
+Variable
+  = x:([a-zA-Z_]+) { return x.join('') }
+
+ObjectPart
+  = x:([a-zA-Z_0-9]+) { return x.join('') }
+
+PrimitiveDefinition
+  = "null"
+  / "TRUE"
+  / "FALSE"
+
+DefinedVariable
+  = [A-Za-z._]+ { return text() }
+
+DefinedMultiPartVariable
+  = [A-Za-z_]+ "." DefinedVariable { return text() }
+
+ObjectSetter
+  = x:("/" FullObject) { return x.join('') }
+
+Delimiter
+  = ","

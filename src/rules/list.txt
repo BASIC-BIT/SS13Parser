@@ -1,0 +1,18 @@
+ListObject
+  = (MapObjectDefinition / ListDefinition / String / Enum / Number / ObjectSetter)
+
+MapKeyDefinition
+  = ObjectSetter / Enum / String
+
+MapValueDefinition
+  = ValueDefinition
+
+ListDefinition
+  = "list" _ "(" _ firstObj:ListObject _ restObjs:(ListNonFirstObject*) _ Delimiter? _ ")" { return [firstObj, ...restObjs] }
+  / "list" _ "(" _ ")" { return [] }
+
+ListNonFirstObject
+  = Delimiter _ obj:ListObject { return obj }
+
+MapObjectDefinition
+  = _ key:MapKeyDefinition _ "=" _ value:MapValueDefinition _ { return { [key]: value } }
