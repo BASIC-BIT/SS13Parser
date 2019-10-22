@@ -1,0 +1,7 @@
+DefineDefinition
+  = "#define" NonNewline
+  / "#undef" NonNewline
+  / "#ifdef" UntilEndOfIfDef "#endif"
+
+UntilEndOfIfDef
+  = (!"#endif" .)*

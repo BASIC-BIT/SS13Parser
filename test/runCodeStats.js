@@ -1,6 +1,6 @@
 const fs = require('fs');
 const util = require('util');
-const { getChemRecipes } = require('../src/stats');
+const { getChemRecipes } = require('../src/codeStats');
 
 const gameData = JSON.parse(fs.readFileSync(__dirname + '/output/parsed.json').toString());
 

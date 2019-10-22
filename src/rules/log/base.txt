@@ -1,0 +1,89 @@
+LogFile
+  = lines:LineWithNewlines* (Newline+)? { return lines }
+
+LineWithNewlines
+  = Newline+ line:Line { return line }
+Line
+  = timestamp:Timestamp Space instanceID:InstanceID Space logType:LogType ":" Space content:LogText  {
+    return { timestamp, instanceID, logType, content };
+  }
+  / startupText:StartupText { return startupText }
+
+Timestamp
+  = "[" h:Hour ":" m:Minute ":" s:Second "]" { return {
+    clock: `${h}:${m}:${s}`,
+    timestamp: parseInt(s, 10) + (parseInt(m, 10) * 60) + (parseInt(h, 10) * 3600)
+  } }
+
+InstanceID
+  = InstanceIDChar+ "-" InstanceIDChar+ { return text() }
+
+InstanceIDChar
+  = [0-9A-Za-z]
+
+Hour
+  = [01] [0-9] { return text() }
+  / [2] [0123] { return text() }
+
+Minute
+  = [0-6] [0-9] { return text() }
+
+Second
+  = [0-6] [0-9] { return text() }
+
+Space
+  = " "
+
+LogType
+  = [A-Z]+ { return text() }
+
+LogText
+  = LoginMessage
+  / LogoutMessage
+  / OtherMessage
+
+LoginMessage
+  = "Login: " key:ByondKey "/(" CharacterName? ") from " ip:IP "-" clientID:ClientID " || " version:ByondVersion {
+    return { 'type': 'login', key, version }
+  }
+
+LogoutMessage
+  = "Logout: " key:ByondKey "/(" CharacterName? ")" {
+    return { 'type': 'logout', key }
+  }
+
+ByondKey
+  = [a-zA-Z_\-0-9 ]+ { return text() }
+  / "*no key*" { return text() }
+
+CharacterName
+  = [a-zA-Z_\-0-9 ]+ { return text() }
+
+IP
+  = IPPart "." IPPart "." IPPart "." IPPart { return text() }
+
+ClientID
+  = [0-9]+ { return text() }
+
+ByondVersion
+  = "BYOND v" version:[0-9]+ { return parseInt(version.join(''), 10) }
+
+IPPart
+  = [0-9] [0-9]? [0-9]?
+
+OtherMessage
+  = (![\r\n] [^\r\n])+ (!(Newline Timestamp) Newline LogText)? { return text() }
+
+Newline
+  = "\r"? "\n"
+
+StartupText
+  = "Starting up. (ID: " instanceId:InstanceID ") " timestamp:StartupTimestamp Newline "-"+ {
+    return { 'startup': true, instanceId, timestamp }
+  }
+
+StartupTimestamp
+  = h:Hour ":" m:Minute "." s:Second { return {
+    clock: `${h}:${m}:${s}`,
+    timestamp: parseInt(s, 10) + (parseInt(m, 10) * 60) + (parseInt(h, 10) * 3600)
+  } }

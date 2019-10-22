@@ -20,5 +20,5 @@ _ "whitespace"
   = [ \t\n\r]*
 
 Tab
-  = [\t]
-  / "    "
+  = Spaces? [\t] Spaces?
+  / "    " Spaces?

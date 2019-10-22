@@ -1,20 +1,23 @@
 
 ProcLine
-  = Tab NonNewline
+  = Tab (&NonNewlineOrQuoteOrComment NonNewlineOrQuoteOrComment)? (&String String (&NonNewlineOrQuoteOrComment NonNewlineOrQuoteOrComment)?)* Comment?
   / OptionalNonNewlineWhitespace Comment
   / OptionalNonNewlineWhitespace BlockComment
+  / "\"}"
 
 InlineProcLine
-  = Tab Tab NonNewline
+  = Tab Tab+ (&NonNewlineOrQuoteOrComment NonNewlineOrQuoteOrComment)? (&String String (&NonNewlineOrQuoteOrComment NonNewlineOrQuoteOrComment)?)* Comment?
   / OptionalNonNewlineWhitespace Comment
   / OptionalNonNewlineWhitespace BlockComment
 
 ArgumentDefinition
-  = (FullObject DefiniteWhitespace "as" DefiniteWhitespace Variable)
+  = (FullObject DefiniteWhitespace "as" DefiniteWhitespace MultiVariableInput)
   / (FullObject DefiniteWhitespace "in range" ArgumentList)
   / (FullObject Spaces? "=" Spaces? ArgumentValue)
   / DefinedMultiPartVariable
+  / ArrayObjectDeclarationDefinition
   / FullObject
+  / ObjectSetter
   / DefinedVariable
   / "..."
 
@@ -36,7 +39,7 @@ FunctionCall
   = (Enum / FullObject) "(" (FunctionCallArgument (Delimiter Spaces? FunctionCallArgument)* Delimiter?)? ")"
 
 FunctionCallArgument
-  = Number / PrimitiveDefinition / Enum / MathExpression / ObjectSetter / String
+  = Number / Enum / MathExpression / ObjectSetter / String
 
 ArgumentValue
-  = String / ListDefinition / PrimitiveDefinition / FunctionCall / DefinedVariable / Number / Enum / ObjectDeclarationDefinition
+  = String / ListDefinition / FunctionCall / DefinedVariable / Number / Enum / ObjectDeclarationDefinition

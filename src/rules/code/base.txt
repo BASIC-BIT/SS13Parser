@@ -2,16 +2,16 @@ CodeFile
   = expressions:(Newline / CodeExpression)* { return expressions.filter(i => i).reduce((acc,cur) => ({ ...acc, ...cur })) }
 
 CodeExpression
-  = value:(Proc / ObjectDefinition) { return value }
+  = &Proc value:Proc { return value }
+  / &ObjectDefinition value:ObjectDefinition { return value }
   / ((Comment NewlineWhitespace) / DefineDefinition / FunctionCall / EmptyLine) { return undefined }
 
 ValueDefinition
-  = String
-  / ListDefinition
-  / PrimitiveDefinition
+  = val:String { return val }
+  / val:ListDefinition { return val }
   / &MathExpression val:MathExpression { return val }
   / &FunctionCall val:FunctionCall { return val }
   / &Number val:Number { return val }
-  / Enum
+  / &ObjectDeclarationDefinition val:ObjectDeclarationDefinition { return val }
+  / &Enum val:Enum { return val }
   / &DefinedVariable val:DefinedVariable { return val }
-  / ObjectDeclarationDefinition

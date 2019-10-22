@@ -1,5 +1,5 @@
 const peg = require('pegjs');
-const rules = require('./rules');
+const rules = require('./rules/code/index');
 
 module.exports = {
   parse(fileContents) {

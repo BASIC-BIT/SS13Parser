@@ -1,6 +1,12 @@
 NonNewline
   = chars:$[^\n]+
 
+NonNewlineOrQuote
+  = chars:$[^\n"']+
+
+NonNewlineOrQuoteOrComment
+  = (!CommentStart chars:$[^\n"'])+
+
 OptionalNonNewline
   = chars:$[^\n]*
 

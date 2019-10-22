@@ -5,7 +5,13 @@ MapKeyDefinition
   = ObjectSetter / Enum / String
 
 MapValueDefinition
-  = ValueDefinition
+  = val:String { return val }
+  / val:ListDefinition { return val }
+  / &FunctionCall val:FunctionCall { return val }
+  / &Number val:Number { return val }
+  / &ObjectDeclarationDefinition val:ObjectDeclarationDefinition { return val }
+  / &Enum val:Enum { return val }
+  / &DefinedVariable val:DefinedVariable { return val }
 
 ListDefinition
   = "list" _ "(" _ firstObj:ListObject _ restObjs:(ListNonFirstObject*) _ Delimiter? _ ")" { return [firstObj, ...restObjs] }

@@ -1,0 +1,42 @@
+String
+  = &DoubleString val:DoubleString { return val; }
+  / &SingleString val:SingleString { return val; }
+
+DoubleString
+  = "\"" val:DoubleStringInterior "\"" { return val; }
+
+SingleString
+  = "'" val:SingleStringInterior "'" { return val; }
+
+DoubleStringInterior =
+  DoubleStringUntilEscaped (DoubleStringEscapedPart DoubleStringUntilEscaped)* { return text() }
+
+DoubleStringUntilEscaped
+  = (!EscapedDoubleStringIdentifier !DoubleStringTerminator .)*
+
+DoubleStringEscapedPart
+  = EscapedDoubleStringIdentifier (!EscapedDoubleStringIdentifier .)* EscapedDoubleStringIdentifier
+
+EscapedDoubleStringIdentifier
+  = "\\\""
+
+DoubleStringTerminator
+  = "\""
+
+StringNextLine
+  = "\\"
+
+SingleStringInterior =
+  SingleStringUntilEscaped (SingleStringEscapedPart SingleStringUntilEscaped)* { return text() }
+
+SingleStringUntilEscaped
+  = (!EscapedSingleStringIdentifier !SingleStringTerminator .)*
+
+SingleStringEscapedPart
+  = EscapedSingleStringIdentifier (!EscapedSingleStringIdentifier .)* EscapedSingleStringIdentifier
+
+EscapedSingleStringIdentifier
+  = "\\'"
+
+SingleStringTerminator
+  = "'"

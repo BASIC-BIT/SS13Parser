@@ -1,3 +1,0 @@
-DefineDefinition
-  = "#define" NonNewline
-  / "#undef" NonNewline

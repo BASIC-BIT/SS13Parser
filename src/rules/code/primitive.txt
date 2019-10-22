@@ -1,0 +1,44 @@
+Enum
+  = [A-Za-z_0-9]+ { return text() }
+
+Number
+  = [0-9.]+ { return parseInt(text(), 10) }
+
+Integer
+  = [0-9]+ { return parseInt(text(), 10) }
+
+FullObject
+  = x:(ObjectPart (ObjectSeparator ObjectPart)*) { return text() }
+
+ObjectSeparator
+  = "/"
+
+Variable
+  = x:([a-zA-Z_]+) { return text() }
+
+MultiVariableInput
+  = Variable (VariableSeparator Variable)* { return text() }
+
+VariableSeparator
+  = "|"
+
+ObjectPart
+  = x:([a-zA-Z_0-9]+) { return text() }
+
+PrimitiveDefinition
+  = "null" { return text() }
+  / "TRUE" { return text() }
+  / "FALSE" { return text() }
+  / "new" { return text() }
+
+DefinedVariable
+  = [A-Za-z._]+ { return text() }
+
+DefinedMultiPartVariable
+  = [A-Za-z_]+ "." DefinedVariable { return text() }
+
+ObjectSetter
+  = x:("/" FullObject "/"?) { return text() }
+
+Delimiter
+  = "," _ Comment? _

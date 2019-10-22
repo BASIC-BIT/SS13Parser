@@ -1,7 +1,7 @@
 const fs = require('fs');
 const dir = require('node-dir');
 const util = require('util');
-const { parse } = require('../src/pegParser');
+const { parse } = require('../src/logParser');
 
 const readFilesStreamCallbackWrapper = (targetDir, callback) => { //Make promisify-compliant with an array instead of 2 callback args
   const data = [];
@@ -35,7 +35,7 @@ function numberWithCommas(x) {
 
 async function getParsedData() {
   const startTime = Date.now();
-  const { files, data, failedFiles } = await readDir(`${__dirname}/data`);
+  const { files, data, failedFiles } = await readDir(`${__dirname}/data/logs`);
 
   const fileCount = files.length;
   const failedFileCount = failedFiles.length;
@@ -44,11 +44,9 @@ async function getParsedData() {
 
   console.log(`Finished parsing ${files.length} files - failed ${failedFiles.length}`);
 
-  const mappedData = data.reduce((acc, cur) => ({ ...acc, ...cur }), {});
+  const fileData = JSON.stringify(data);
 
-  const fileData = JSON.stringify(mappedData);
-
-  await util.promisify(fs.writeFile)(`${__dirname}/output/parsed.json`, fileData);
+  await util.promisify(fs.writeFile)(`${__dirname}/output/logs.json`, fileData);
   const endTime = Date.now();
 
   const secondsToComplete = (endTime - startTime) / 1000;
