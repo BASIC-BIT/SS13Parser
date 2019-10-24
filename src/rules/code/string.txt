@@ -3,19 +3,16 @@ String
   / &SingleString val:SingleString { return val; }
 
 DoubleString
-  = "\"" val:DoubleStringInterior "\"" { return val; }
+  = DoubleStringTerminator val:DoubleStringInterior DoubleStringTerminator { return val; }
 
 SingleString
-  = "'" val:SingleStringInterior "'" { return val; }
+  = SingleStringTerminator val:SingleStringInterior SingleStringTerminator { return val; }
 
 DoubleStringInterior =
-  DoubleStringUntilEscaped (DoubleStringEscapedPart DoubleStringUntilEscaped)* { return text() }
+  DoubleStringUntilEscaped (EscapedDoubleStringIdentifier DoubleStringUntilEscaped)* { return text() }
 
 DoubleStringUntilEscaped
   = (!EscapedDoubleStringIdentifier !DoubleStringTerminator .)*
-
-DoubleStringEscapedPart
-  = EscapedDoubleStringIdentifier (!EscapedDoubleStringIdentifier .)* EscapedDoubleStringIdentifier
 
 EscapedDoubleStringIdentifier
   = "\\\""
@@ -27,13 +24,10 @@ StringNextLine
   = "\\"
 
 SingleStringInterior =
-  SingleStringUntilEscaped (SingleStringEscapedPart SingleStringUntilEscaped)* { return text() }
+  SingleStringUntilEscaped (EscapedSingleStringIdentifier SingleStringUntilEscaped)* { return text() }
 
 SingleStringUntilEscaped
   = (!EscapedSingleStringIdentifier !SingleStringTerminator .)*
-
-SingleStringEscapedPart
-  = EscapedSingleStringIdentifier (!EscapedSingleStringIdentifier .)* EscapedSingleStringIdentifier
 
 EscapedSingleStringIdentifier
   = "\\'"

@@ -3,45 +3,37 @@ const dir = require('node-dir');
 const util = require('util');
 const { parse } = require('../src/codeParser');
 
-const readFilesStreamCallbackWrapper = (targetDir, callback) => { //Make promisify-compliant with an array instead of 2 callback args
+const parseFiles = async (targetDir, paths) => { //Make promisify-compliant with an array instead of 2 callback args
   const data = [];
   const failedFiles = [];
   const readFiles = [];
-  dir.readFilesStream(targetDir,
-    function (err, stream, filename, next) {
-      if (err) throw err;
-      if(!filename.endsWith('.dm')) {
-        next();
-        return;
-      }
-      var content = '';
-      stream.on('data', function (buffer) {
-        content += buffer.toString();
-      });
-      stream.on('end', function () {
-        readFiles.push(filename);
-        try {
-          data.push(parse(content));
-        } catch(e) {
-          console.log(`Failed parsing file ${filename} - ${e.message}\n - ${e.error && e.error.message}`);
-          failedFiles.push(filename);
-        }
-        next();
-      });
-    }, (err, files) => callback(err, { files, data, readFiles, failedFiles }));
-};
 
-async function readDir(targetDir) {
-  return await util.promisify(readFilesStreamCallbackWrapper)(targetDir);
-}
+  await Promise.all(paths.map(async (path) => {
+    try {
+      const content = await util.promisify(fs.readFile)(targetDir + path);
+      data.push(parse(content.toString()));
+      readFiles.push(path);
+    } catch (e) {
+      console.log(`Failed parsing file ${path} - ${e.message}\n - ${e.error && e.error.message}`);
+      failedFiles.push(path);
+    }
+  }));
+
+  return { data, failedFiles, readFiles };
+};
 
 function numberWithCommas(x) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 async function getParsedData() {
+  const dir = `${__dirname}/data/codebase/`;
+  const manifestPath = `${__dirname}/output/manifest.json`;
   const startTime = Date.now();
-  const { files, readFiles, data, failedFiles } = await readDir(`${__dirname}/data/code`);
+
+  const paths = JSON.parse(fs.readFileSync(manifestPath).toString());
+
+  const { readFiles, data, failedFiles } = await parseFiles(dir, paths);
 
   const fileCount = readFiles.length;
   const failedFileCount = failedFiles.length;

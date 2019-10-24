@@ -7,6 +7,25 @@ EmptyLine
 Spaces
   = [ ]+
 
+SpacesOrTabs
+  = [ \t]+
+
+WhitespaceOrExclusiveSlashNewline
+  = WhitespaceOrExclusiveSlashNewlinePart*
+
+WhitespaceOrExclusiveSlashNewlinePart
+  = "/" "\r"? "\n"
+  / "\\" "\r"? "\n"
+  / [ \t]
+
+WhitespaceOrSlashNewline
+  = WhitespaceOrSlashNewlinePart*
+
+WhitespaceOrSlashNewlinePart
+  = "/" "\r"? "\n"
+  / "\\" "\r"? "\n"
+  / [ \t\n\r]
+
 OptionalNonNewlineWhitespace
   = [ \t]*
 

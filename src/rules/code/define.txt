@@ -1,7 +1,8 @@
 DefineDefinition
-  = "#define" NonNewline
-  / "#undef" NonNewline
-  / "#ifdef" UntilEndOfIfDef "#endif"
+  = SpacesOrTabs? "#define" NonNewline
+  / SpacesOrTabs? "#undef" NonNewline
+  / SpacesOrTabs? "#ifdef" UntilEndOfIfDef "#endif"
+  / SpacesOrTabs? "#ifndef" UntilEndOfIfDef "#endif"
 
 UntilEndOfIfDef
   = (!"#endif" .)*

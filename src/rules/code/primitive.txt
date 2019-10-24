@@ -2,13 +2,26 @@ Enum
   = [A-Za-z_0-9]+ { return text() }
 
 Number
-  = [0-9.]+ { return parseInt(text(), 10) }
+  = &ExponentNumber val:ExponentNumber { return val }
+  / &Float val:Float { return val }
+  / &Integer val:Integer { return val }
+ExponentNumber
+  = number:(Float / Integer) "e" exp:Natural { return parseFloat(number, 10) * (10 ^ exp) }
+
+Float
+  = Integer "." Natural { return parseFloat(text(), 10) }
 
 Integer
+  = "-"? Natural { return parseInt(text(), 10) }
+
+Natural
   = [0-9]+ { return parseInt(text(), 10) }
 
 FullObject
-  = x:(ObjectPart (ObjectSeparator ObjectPart)*) { return text() }
+  = x:(ObjectPart (&ObjectPartWithSeparator ObjectPartWithSeparator)*) { return text() }
+
+ObjectPartWithSeparator
+  = ObjectSeparator ObjectPart
 
 ObjectSeparator
   = "/"

@@ -3,8 +3,24 @@ Operator
   / [|+\-*]
 
 Operand
-  = Enum / Number
+  = (&Enum Enum)
+  / (&Number Number)
 
 MathExpression
-  = (Operand Spaces? Operator Spaces? Operand OptionalNonNewline) { return "math" }
+  = Operand Spaces Enum { return "math" }
+  / (OpeningParens Operand Spaces? Operator Spaces? Operand OptionalNonNewline) { return "math" }
+  / (Operand Spaces? Operator Spaces? Operand OptionalNonNewline) { return "math" }
+  / (OpeningParens Operator Spaces? Operand OptionalNonNewline) { return "math" }
   / (Operator Spaces? Operand OptionalNonNewline) { return "math" }
+
+OpeningParens
+  = ("(" Spaces?)+
+
+KnownMathDefines
+  = "SECONDS"
+  / "MINUTES"
+  / "HOURS"
+  / "DAYS"
+  / "KILOWATTS"
+  / "MEGAWATTS"
+  / "GIGAWATTS"

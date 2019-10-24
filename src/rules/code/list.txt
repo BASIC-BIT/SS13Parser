@@ -14,8 +14,8 @@ MapValueDefinition
   / &DefinedVariable val:DefinedVariable { return val }
 
 ListDefinition
-  = "list" _ "(" _ firstObj:ListObject _ restObjs:(ListNonFirstObject*) _ Delimiter? _ ")" { return [firstObj, ...restObjs] }
-  / "list" _ "(" _ ")" { return [] }
+  = "list" _ "(" WhitespaceOrSlashNewline firstObj:ListObject WhitespaceOrSlashNewline restObjs:(ListNonFirstObject*) WhitespaceOrSlashNewline Delimiter? WhitespaceOrSlashNewline ")" { return [firstObj, ...restObjs] }
+  / "list" _ "(" WhitespaceOrSlashNewline ")" { return [] }
 
 ListNonFirstObject
   = Delimiter _ obj:ListObject { return obj }

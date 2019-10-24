@@ -3,7 +3,7 @@ ProcLine
   = Tab (&NonNewlineOrQuoteOrComment NonNewlineOrQuoteOrComment)? (&String String (&NonNewlineOrQuoteOrComment NonNewlineOrQuoteOrComment)?)* Comment?
   / OptionalNonNewlineWhitespace Comment
   / OptionalNonNewlineWhitespace BlockComment
-  / "\"}"
+  / OptionalNonNewlineWhitespace DefineDefinition
 
 InlineProcLine
   = Tab Tab+ (&NonNewlineOrQuoteOrComment NonNewlineOrQuoteOrComment)? (&String String (&NonNewlineOrQuoteOrComment NonNewlineOrQuoteOrComment)?)* Comment?
@@ -13,6 +13,7 @@ InlineProcLine
 ArgumentDefinition
   = (FullObject DefiniteWhitespace "as" DefiniteWhitespace MultiVariableInput)
   / (FullObject DefiniteWhitespace "in range" ArgumentList)
+  / (FullObject Spaces? "=" Spaces? ArgumentValue DefiniteWhitespace "as" DefiniteWhitespace MultiVariableInput)
   / (FullObject Spaces? "=" Spaces? ArgumentValue)
   / DefinedMultiPartVariable
   / ArrayObjectDeclarationDefinition
@@ -36,7 +37,7 @@ InlineProcDef
 
 
 FunctionCall
-  = (Enum / FullObject) "(" (FunctionCallArgument (Delimiter Spaces? FunctionCallArgument)* Delimiter?)? ")"
+  = (Enum / FullObject) WhitespaceOrExclusiveSlashNewline "(" (FunctionCallArgument (Delimiter Spaces? FunctionCallArgument)* Delimiter?)? ")"
 
 FunctionCallArgument
   = Number / Enum / MathExpression / ObjectSetter / String

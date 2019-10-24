@@ -1,0 +1,32 @@
+ManifestFile
+  = Newline* lines:LineWithNewline* { return lines }
+  / Newline* firstLine:(Line?) restLines:(NewlineWithLine*) { return firstLine ? [ firstLine, ...restLines ] : restLines }
+
+LineWithNewline
+  = line:Line Newline { return line }
+
+NewlineWithLine
+  = Newline line:Line { return line }
+
+Line
+  = &IncludeDefinition val:IncludeDefinition { return val }
+  / NonNewline
+
+IncludeDefinition
+  = "#include" Spaces Quote val:NonQuoteOrNewline Quote NonNewline? { return val }
+
+Quote
+  = "\""
+  / "'"
+
+Spaces
+  = " "+
+
+NonQuoteOrNewline
+  = chars:$[^'"\n]+
+
+NonNewline
+  = chars:$[^\n]+ { return undefined }
+
+Newline
+  = "\r"? "\n"
