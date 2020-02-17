@@ -12,7 +12,7 @@ function smoothData(parsed) {
 
 async function getParsedData() {
   const startTime = Date.now();
-  const manifestData = fs.readFileSync(__dirname + '/data/codebase/cev_eris.dme').toString();
+  const manifestData = fs.readFileSync(__dirname + '/data/codebase/baystation12.dme').toString();
 
   const parsedData = parse(manifestData);
 
