@@ -10,22 +10,6 @@ function getChildPartOfKey(key, parentKey) {
   return key.slice(parentKey.length);
 }
 
-// function hasCombinableData(data) {
-//   return data.some(([key, value], index) => {
-//     return data.slice(index + 1).some(([otherKey]) => isChildKey(key, otherKey));
-//   });
-// }
-
-// function findParentToCombine(data, childKey) {
-//   const foundIndex = data.findIndex(([key]) => isChildKey(childKey, key));
-//
-//   if(foundIndex) {
-//     return [foundIndex, ...data[foundIndex]];
-//   } else {
-//     return []
-//   }
-// }
-
 function findCombinableData(data) {
   let parentIndex = undefined;
 
@@ -53,10 +37,11 @@ function findCombinableData(data) {
 }
 
 function runOneCombine(data, foundIndex, foundKey, foundValue, parentIndex, parentKey, parentValue) {
-  console.log(`Found Key To Combine: ${foundKey}`);
-  console.log(`Found Parent Key To Combine: ${parentKey}`);
+  // console.log(`Found Key To Combine: ${foundKey}`);
+  // console.log(`Found Parent Key To Combine: ${parentKey}`);
 
-  return data.slice(0, parentIndex).filter(([dataKey]) => dataKey !== foundKey)
+  return data.slice(0, foundIndex)
+    .concat(data.slice(foundIndex + 1, parentIndex))
     .concat([[parentKey, {
       ...parentValue,
       [getChildPartOfKey(foundKey, parentKey)]: foundValue,
@@ -96,6 +81,5 @@ function parse(data) {
   return combineData(Object.entries(data))
     .reduce((acc, [key, value]) => ({ ...acc, [key]: value }));
 }
-
 
 module.exports = { parse };

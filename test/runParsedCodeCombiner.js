@@ -13,7 +13,7 @@ async function getParsedData() {
 
   const combinedData = parse(gameData);
 
-  console.log(combinedData);
+  // console.log(combinedData);
 
   const fileData = JSON.stringify(combinedData);
 
